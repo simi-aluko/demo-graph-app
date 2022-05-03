@@ -91,44 +91,54 @@ class ChartAppState extends State<ChartApp> {
 
   @override
   Widget build(BuildContext context) {
-    return SfCartesianChart(
-        backgroundColor: Colors.white,
-        //Specifying date time interval type as hours
-        primaryXAxis: DateTimeAxis(
-            majorGridLines: MajorGridLines(width: 0),
-            edgeLabelPlacement: EdgeLabelPlacement.shift,
-            intervalType: DateTimeIntervalType.seconds,
-            interval: 8,
-            labelRotation: 120,
-            axisLabelFormatter: (AxisLabelRenderDetails args) {
-              late String text;
-              text = DateTime.fromMillisecondsSinceEpoch(args.value.toInt())
-                      .hour
-                      .toString() +
-                  ':' +
-                  DateTime.fromMillisecondsSinceEpoch(args.value.toInt())
-                      .minute
-                      .toString() +
-                  ':' +
-                  DateTime.fromMillisecondsSinceEpoch(args.value.toInt())
-                      .second
-                      .toString();
-              return ChartAxisLabel(text, args.textStyle);
-            }),
-        series: <ChartSeries<TimeSeries, DateTime>>[
-          LineSeries<TimeSeries, DateTime>(
-            dataSource: flowData,
-            xValueMapper: (TimeSeries sales, _) => sales.time,
-            yValueMapper: (TimeSeries sales, _) => sales.parameter,
-            name: 'Sales',
-          ),
-          LineSeries<TimeSeries, DateTime>(
-            dataSource: pressureData,
-            xValueMapper: (TimeSeries sales, _) => sales.time,
-            yValueMapper: (TimeSeries sales, _) => sales.parameter,
-            name: 'Sales',
-          ),
-        ]);
+    return FutureBuilder(
+      future: loadAsset(),
+      builder: (ctx, snapshot) {
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator(),);
+        }
+
+        return SfCartesianChart(
+            backgroundColor: Colors.white,
+            //Specifying date time interval type as hours
+            primaryXAxis: DateTimeAxis(
+                majorGridLines: MajorGridLines(width: 0),
+                edgeLabelPlacement: EdgeLabelPlacement.shift,
+                intervalType: DateTimeIntervalType.seconds,
+                interval: 8,
+                labelRotation: 120,
+                axisLabelFormatter: (AxisLabelRenderDetails args) {
+                  late String text;
+                  text = DateTime.fromMillisecondsSinceEpoch(args.value.toInt())
+                          .hour
+                          .toString() +
+                      ':' +
+                      DateTime.fromMillisecondsSinceEpoch(args.value.toInt())
+                          .minute
+                          .toString() +
+                      ':' +
+                      DateTime.fromMillisecondsSinceEpoch(args.value.toInt())
+                          .second
+                          .toString();
+                  return ChartAxisLabel(text, args.textStyle);
+                }),
+            series: <ChartSeries<TimeSeries, DateTime>>[
+              LineSeries<TimeSeries, DateTime>(
+                dataSource: flowData,
+                xValueMapper: (TimeSeries sales, _) => sales.time,
+                yValueMapper: (TimeSeries sales, _) => sales.parameter,
+                name: 'Sales',
+              ),
+              LineSeries<TimeSeries, DateTime>(
+                dataSource: pressureData,
+                xValueMapper: (TimeSeries sales, _) => sales.time,
+                yValueMapper: (TimeSeries sales, _) => sales.parameter,
+                name: 'Sales',
+              ),
+            ]);
+      },
+    );
   }
 
   loadAsset() async {
@@ -150,16 +160,16 @@ class ChartAppState extends State<ChartApp> {
       data2.add(TimeSeries(date, rowsAsListOfValues[i][7]));
     }
 
-    setState(() {
+    // setState(() {
       flowData = data1;
       pressureData = data2;
-    });
+    // });
   }
 
   @override
   void initState() {
     super.initState();
-    loadAsset();
+    // loadAsset();
   }
 }
 

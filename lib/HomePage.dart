@@ -5,12 +5,12 @@ import 'package:graph_demo/SFChart.dart';
 import 'GoogleCharts.dart';
 
 class HomePage extends StatelessWidget {
-
   HomePage({Key? key}) : super(key: key);
+
+  final PageController controller = PageController();
 
   @override
   Widget build(BuildContext context) {
-    final PageController controller = PageController();
     return Scaffold(
       appBar: AppBar(
         title: Text("Graph Demo App"),
