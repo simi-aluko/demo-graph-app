@@ -88,19 +88,17 @@ class ChartApp extends StatefulWidget {
 }
 
 class ChartAppState extends State<ChartApp> {
-  List<TimeSeries> pressureData = <TimeSeries>[];
-  List<TimeSeries> pressureChartData = <TimeSeries>[];
-  int pressureDataCount = 0;
-
+  List<TimeSeries> fullFlowData = <TimeSeries>[];
   List<TimeSeries> flowData = <TimeSeries>[];
-  List<TimeSeries> flowChartData = <TimeSeries>[];
-  int flowDataCount = 0;
+  ChartSeriesController? flowSeriesController;
+
+  List<TimeSeries> fullPressureData = <TimeSeries>[];
+  List<TimeSeries> pressureData = <TimeSeries>[];
+  ChartSeriesController? pressureSeriesController;
 
   Timer? timer;
-  ChartSeriesController? _chartSeriesController;
-
-  int flowGraphStartIndex = 0;
-  int flowGraphEndIndex = 19;
+  int startIndex = 0;
+  int endIndex = 19;
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +118,6 @@ class ChartAppState extends State<ChartApp> {
                 majorGridLines: MajorGridLines(width: 0),
                 edgeLabelPlacement: EdgeLabelPlacement.shift,
                 intervalType: DateTimeIntervalType.seconds,
-                // interval: 5,
-                // labelRotation: 60,
                 axisLabelFormatter: (AxisLabelRenderDetails args) {
                   late String text;
                   text = DateTime.fromMillisecondsSinceEpoch(args.value.toInt())
@@ -139,54 +135,32 @@ class ChartAppState extends State<ChartApp> {
                 }),
             series: <ChartSeries<TimeSeries, DateTime>>[
               LineSeries<TimeSeries, DateTime>(
-                onRendererCreated: (ChartSeriesController controller) {
-                  // Assigning the controller to the _chartSeriesController.
-                  _chartSeriesController = controller;
-                },
-                dataSource: flowData,
-                xValueMapper: (TimeSeries sales, _) => sales.time,
-                yValueMapper: (TimeSeries sales, _) => sales.parameter,
-                name: 'Sales',
-              ),
+                  dataSource: flowData,
+                  xValueMapper: (TimeSeries sales, _) => sales.time,
+                  yValueMapper: (TimeSeries sales, _) => sales.parameter,
+                  name: 'Sales',
+                  onRendererCreated: (ChartSeriesController controller) {
+                    flowSeriesController = controller;
+                  },
+                  animationDuration: 1000),
               LineSeries<TimeSeries, DateTime>(
-                onRendererCreated: (ChartSeriesController controller) {
-                  // Assigning the controller to the _chartSeriesController.
-                  _chartSeriesController = controller;
-                },
-                dataSource: pressureData,
-                xValueMapper: (TimeSeries sales, _) => sales.time,
-                yValueMapper: (TimeSeries sales, _) => sales.parameter,
-                name: 'Sales',
-              ),
+                  dataSource: pressureData,
+                  xValueMapper: (TimeSeries sales, _) => sales.time,
+                  yValueMapper: (TimeSeries sales, _) => sales.parameter,
+                  name: 'Sales',
+                  onRendererCreated: (ChartSeriesController controller) {
+                    pressureSeriesController = controller;
+                  },
+                  animationDuration: 1000),
             ]);
       },
     );
-  }
-
-  void _updateDataSource(Timer timer) {
-    print("calling update");
-    if (flowData.isNotEmpty) {
-      print("flow not empty");
-      flowChartData.add(flowData[flowChartData.length]);
-      if (flowChartData.length == 21) {
-        // Removes the last index data of data source.
-        flowChartData.removeAt(0);
-        // Here calling updateDataSource method with addedDataIndexes to add data in last index and removedDataIndexes to remove data from the last.
-        _chartSeriesController?.updateDataSource(
-            addedDataIndexes: <int>[flowChartData.length - 1],
-            removedDataIndexes: <int>[0]);
-      }
-    }
   }
 
   loadAsset() async {
     final myData = await rootBundle.loadString('assets/test_data.csv');
     List<List<dynamic>> rowsAsListOfValues =
         const CsvToListConverter().convert(myData);
-    var data1 = <TimeSeries>[];
-    var data2 = <TimeSeries>[];
-    var chartdata1 = <TimeSeries>[];
-    var chartdata2 = <TimeSeries>[];
 
     for (int i = 0; i < rowsAsListOfValues.length; i++) {
       if (i == 0) continue;
@@ -196,40 +170,41 @@ class ChartAppState extends State<ChartApp> {
       // GraphDataClass channel0 = GraphDataClass(rowsAsListOfValues[i][1], rowsAsListOfValues[i][6], rowsAsListOfValues[i][7]);
       // GraphDataClass channel1 = GraphDataClass(rowsAsListOfValues[i][1], rowsAsListOfValues[i][13], rowsAsListOfValues[i][14]);
       // GraphDataClass channel2 = GraphDataClass(rowsAsListOfValues[i][1], rowsAsListOfValues[i][20], rowsAsListOfValues[i][21]);
-      data1.add(TimeSeries(date, rowsAsListOfValues[i][6]));
-      data2.add(TimeSeries(date, rowsAsListOfValues[i][7]));
-      if (i < 20) {
-        chartdata1.add(data1[i]);
-        chartdata2.add(data2[i]);
+      fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][6]));
+      fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][7]));
+
+      if (i <= endIndex + 1) {
+        flowData.add(fullFlowData[i]);
+        pressureData.add(fullPressureData[i]);
       }
     }
 
-    // setState(() {
-    flowData = data1;
-    flowDataCount = flowData.length;
-    flowChartData = chartdata1;
-
-    pressureData = data2;
-    pressureDataCount = pressureData.length;
-    pressureChartData = chartdata2;
-    // });
-
     timer =
-        Timer.periodic(const Duration(milliseconds: 1000), _updateDataSource);
+        Timer.periodic(const Duration(milliseconds: 500), _updateDataSource);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    // loadAsset();
+  void _updateDataSource(Timer timer) {
+    startIndex += 1;
+    endIndex += 1;
+
+    flowData.add(fullFlowData[endIndex]);
+    if (flowData.length == 21) {
+      flowData.removeAt(0);
+      flowSeriesController!.updateDataSource(
+        addedDataIndexes: <int>[flowData.length - 1],
+        removedDataIndexes: <int>[0],
+      );
+    }
+
+    pressureData.add(fullPressureData[endIndex]);
+    if (pressureData.length == 21) {
+      pressureData.removeAt(0);
+      pressureSeriesController!.updateDataSource(
+        addedDataIndexes: <int>[pressureData.length - 1],
+        removedDataIndexes: <int>[0],
+      );
+    }
   }
-}
-
-class ChartSampleData {
-  ChartSampleData({this.x, this.yValue});
-
-  final DateTime? x;
-  final double? yValue;
 }
 
 class TimeSeries {
