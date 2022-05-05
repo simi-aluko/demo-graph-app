@@ -81,13 +81,15 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 
 class ChartApp extends StatefulWidget {
   // ignore: prefer_const_constructors_in_immutables
-  ChartApp({Key? key}) : super(key: key);
+  int valve;
+  ChartApp(this.valve, {Key? key}) : super(key: key);
 
   @override
   ChartAppState createState() => ChartAppState();
 }
 
-class ChartAppState extends State<ChartApp> {
+class ChartAppState extends State<ChartApp>
+    with AutomaticKeepAliveClientMixin<ChartApp> {
   List<TimeSeries> fullFlowData = <TimeSeries>[];
   List<TimeSeries> flowData = <TimeSeries>[];
   ChartSeriesController? flowSeriesController;
@@ -102,6 +104,7 @@ class ChartAppState extends State<ChartApp> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return FutureBuilder(
       future: loadAsset(),
       builder: (ctx, snapshot) {
@@ -167,11 +170,20 @@ class ChartAppState extends State<ChartApp> {
 
       String dateString = rowsAsListOfValues[i][1];
       DateTime date = DateFormat('dd/MM/yyyy H:m:s').parse(dateString);
-      // GraphDataClass channel0 = GraphDataClass(rowsAsListOfValues[i][1], rowsAsListOfValues[i][6], rowsAsListOfValues[i][7]);
-      // GraphDataClass channel1 = GraphDataClass(rowsAsListOfValues[i][1], rowsAsListOfValues[i][13], rowsAsListOfValues[i][14]);
-      // GraphDataClass channel2 = GraphDataClass(rowsAsListOfValues[i][1], rowsAsListOfValues[i][20], rowsAsListOfValues[i][21]);
-      fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][6]));
-      fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][7]));
+      if (widget.valve == 0) {
+        fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][6]));
+        fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][7]));
+      }
+
+      if (widget.valve == 1) {
+        fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][13]));
+        fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][14]));
+      }
+
+      if (widget.valve == 2) {
+        fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][20]));
+        fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][21]));
+      }
 
       if (i <= endIndex + 1) {
         flowData.add(fullFlowData[i]);
@@ -205,6 +217,9 @@ class ChartAppState extends State<ChartApp> {
       );
     }
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
 
 class TimeSeries {
