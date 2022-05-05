@@ -18,31 +18,33 @@ class HomePage extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
+            flex: 2,
             child: PageView(
               controller: controller,
               children: [
                 Container(
                   margin: EdgeInsets.fromLTRB(15, 25, 15, 15),
                   child: ChartApp(0),
-                  height: MediaQuery.of(context).size.height / 2,
+                  // height: MediaQuery.of(context).size.height / 2,
                   width: MediaQuery.of(context).size.width,
                 ),
                 Container(
                   margin: EdgeInsets.fromLTRB(15, 25, 15, 15),
                   child: ChartApp(1),
-                  height: MediaQuery.of(context).size.height / 2,
+                  // height: MediaQuery.of(context).size.height / 2,
                   width: MediaQuery.of(context).size.width,
                 ),
                 Container(
                   margin: EdgeInsets.fromLTRB(15, 25, 15, 15),
                   child: ChartApp(2),
-                  height: MediaQuery.of(context).size.height / 2,
+                  // height: MediaQuery.of(context).size.height / 2,
                   width: MediaQuery.of(context).size.width,
                 ),
               ],
             ),
           ),
           Expanded(
+            flex: 1,
               child: Container(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

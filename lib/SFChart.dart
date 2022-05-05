@@ -72,6 +72,7 @@ class TimeSeries {
 */
 
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
@@ -186,8 +187,8 @@ class ChartAppState extends State<ChartApp>
       }
 
       if (i <= endIndex + 1) {
-        flowData.add(fullFlowData[i]);
-        pressureData.add(fullPressureData[i]);
+        flowData.add(fullFlowData[i - 1]);
+        pressureData.add(fullPressureData[i - 1]);
       }
     }
 
