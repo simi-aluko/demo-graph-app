@@ -103,6 +103,8 @@ class ChartAppState extends State<ChartApp>
   int startIndex = 0;
   int endIndex = 19;
 
+  late ZoomPanBehavior _zoomPanBehavior;
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -116,9 +118,20 @@ class ChartAppState extends State<ChartApp>
         }
 
         return SfCartesianChart(
+            title: ChartTitle(text: "Valve ${widget.valve + 1}"),
+            enableAxisAnimation: true,
             backgroundColor: Colors.white,
+            legend: Legend(isVisible: true, position: LegendPosition.top),
+            zoomPanBehavior: _zoomPanBehavior,
             //Specifying date time interval type as hours
             primaryXAxis: DateTimeAxis(
+                title: AxisTitle(
+                    text: "Time (Hour:min:sec)",
+                    textStyle: const TextStyle(
+                        color: Colors.black,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
                 majorGridLines: MajorGridLines(width: 0),
                 edgeLabelPlacement: EdgeLabelPlacement.shift,
                 intervalType: DateTimeIntervalType.seconds,
@@ -137,12 +150,21 @@ class ChartAppState extends State<ChartApp>
                           .toString();
                   return ChartAxisLabel(text, args.textStyle);
                 }),
+            primaryYAxis: NumericAxis(
+                decimalPlaces: 1,
+                title: AxisTitle(
+                    text: "Flow and Pressure",
+                    textStyle: const TextStyle(
+                        color: Colors.black,
+                        fontFamily: 'Roboto',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12))),
             series: <ChartSeries<TimeSeries, DateTime>>[
               LineSeries<TimeSeries, DateTime>(
                   dataSource: flowData,
                   xValueMapper: (TimeSeries sales, _) => sales.time,
                   yValueMapper: (TimeSeries sales, _) => sales.parameter,
-                  name: 'Sales',
+                  name: 'Flow',
                   onRendererCreated: (ChartSeriesController controller) {
                     flowSeriesController = controller;
                   },
@@ -151,7 +173,7 @@ class ChartAppState extends State<ChartApp>
                   dataSource: pressureData,
                   xValueMapper: (TimeSeries sales, _) => sales.time,
                   yValueMapper: (TimeSeries sales, _) => sales.parameter,
-                  name: 'Sales',
+                  name: 'Pressure',
                   onRendererCreated: (ChartSeriesController controller) {
                     pressureSeriesController = controller;
                   },
@@ -171,19 +193,26 @@ class ChartAppState extends State<ChartApp>
 
       String dateString = rowsAsListOfValues[i][1];
       DateTime date = DateFormat('dd/MM/yyyy H:m:s').parse(dateString);
-      if (widget.valve == 0) {
-        fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][6]));
-        fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][7]));
-      }
 
-      if (widget.valve == 1) {
-        fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][13]));
-        fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][14]));
-      }
-
-      if (widget.valve == 2) {
-        fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][20]));
-        fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][21]));
+      switch (widget.valve) {
+        case 0:
+          {
+            fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][6]));
+            fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][7]));
+          }
+          break;
+        case 1:
+          {
+            fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][13]));
+            fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][14]));
+          }
+          break;
+        case 2:
+          {
+            fullFlowData.add(TimeSeries(date, rowsAsListOfValues[i][20]));
+            fullPressureData.add(TimeSeries(date, rowsAsListOfValues[i][21]));
+          }
+          break;
       }
 
       if (i <= endIndex + 1) {
@@ -221,6 +250,16 @@ class ChartAppState extends State<ChartApp>
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    _zoomPanBehavior = ZoomPanBehavior(
+        // Enables pinch zooming
+        enablePinching: true,
+        enablePanning: true,
+        enableSelectionZooming: true);
+    super.initState();
+  }
 }
 
 class TimeSeries {
